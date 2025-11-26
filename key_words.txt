@@ -1,0 +1,5 @@
+'"suicida" OR "suicídio" OR "me matar" OR "meu bilhete suicida" OR "minha carta suicida" OR "ir dormir pra sempre"'
+'"acabar com a minha vida" OR "nunca acordar" OR "não consigo continuar" OR "não vale a pena viver" OR "pronto para pular"'
+'"dormir pra sempre" OR "quero morrer" OR "estar morto" OR "melhor sem mim" OR "melhor morto"'
+'"plano de suicídio" OR "pacto de suicídio" OR "cansado de viver" OR "não quero estar aqui" OR "morrer sozinho"'
+

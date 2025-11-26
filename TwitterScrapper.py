@@ -11,7 +11,7 @@ from datetime import datetime, timezone, timedelta
 
 MAX_TWEETS = 15
 AUTH_FILE = "auth.json"
-SEARCH_QUERY = "(suicídio OR triste) lang:pt"
+SEARCH_QUERY = '"suicida" OR "suicídio" OR "me matar" OR "meu bilhete suicida" OR "minha carta suicida" OR "ir dormir pra sempre"' + ' lang:pt'
 OUTPUT_FILE = "tweets.csv"
 
 # Carregar tweets existentes
@@ -133,9 +133,9 @@ async def scrape():
 
                     print(f"\n📌 Tweet coletado ({len(collected_this_run)}/{MAX_TWEETS}):")
                     print(f"ID {tweet_id}")
-                    print(f"🕒 {timestamp_br}")
-                    print(f"📍 {location}")
-                    print(f"💬 {tweet_text}\n")
+                    print(f"Data e Hora {timestamp_br}")
+                    print(f"Loc {location}")
+                    print(f"Tweet: {tweet_text}\n")
 
                 except Exception as e:
                     print("Erro ao processar tweet:", e)
@@ -150,6 +150,6 @@ async def scrape():
             writer.writeheader()
             writer.writerows(results)
 
-        print(f"\n📁 Concluído! {len(results)} tweets salvos em {OUTPUT_FILE}")
+        print(f"\n{len(results)} tweets salvos em {OUTPUT_FILE}")
 
 asyncio.run(scrape())
