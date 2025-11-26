@@ -3,7 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-auth.json
+# Auth
+auth.jso
+x.com_cookies.txt
 
 # C extensions
 *.so
