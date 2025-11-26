@@ -186,3 +186,6 @@ cython_debug/
 # Auth
 auth.json
 x.com_cookies.txt
+
+# Tweets
+tweets.csv

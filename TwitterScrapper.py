@@ -2,18 +2,19 @@ import asyncio
 import json
 import os
 import csv
-import re
 import random
+import TextProcessing as tp
+import RandomValues as rv
 from playwright.async_api import async_playwright
 from datetime import datetime, timezone, timedelta
 
 
-MAX_TWEETS = 30
+MAX_TWEETS = 15
 AUTH_FILE = "auth.json"
 SEARCH_QUERY = "(suicídio OR triste) lang:pt"
 OUTPUT_FILE = "tweets.csv"
 
-# --- Carregar tweets existentes ---
+# Carregar tweets existentes
 existing_tweet_ids = set()
 results = []
 
@@ -26,10 +27,8 @@ if file_exists:
             results.append(row)
             existing_tweet_ids.add(row["tweet_id"])
 
-# Opcional: proxies
-PROXIES = [
-
-]
+# proxies
+PROXIES = []
 
 def convert_utc_to_brasilia(utc_str):
     if not utc_str:
@@ -40,30 +39,6 @@ def convert_utc_to_brasilia(utc_str):
     brasilia_tz = timezone(timedelta(hours=-3))
     dt_brasilia = dt_utc.astimezone(brasilia_tz)
     return dt_brasilia.strftime("%Y-%m-%d %H:%M:%S")
-
-def random_wait(a=800, b=1800):
-    return random.randint(a, b)
-
-
-def random_scroll():
-    return random.randint(1800, 3500)
-
-
-def get_random_user_agent():
-    uas = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0 Safari/537.36",
-        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15",
-    ]
-    return random.choice(uas)
-
-
-def get_random_viewport():
-    return {
-        "width": random.randint(1100, 1600),
-        "height": random.randint(700, 1000)
-    }
-
 
 async def load_cookies(context):
     try:
@@ -86,8 +61,8 @@ async def scrape():
         )
 
         context = await browser.new_context(
-            user_agent=get_random_user_agent(),
-            viewport=get_random_viewport()
+            user_agent=rv.get_random_user_agent(),
+            viewport=rv.get_random_viewport()
         )
 
         await load_cookies(context)
@@ -96,7 +71,7 @@ async def scrape():
 
         url = f"https://x.com/search?q={SEARCH_QUERY}&src=typed_query&f=live"
         await page.goto(url)
-        await page.wait_for_timeout(random_wait())
+        await page.wait_for_timeout(rv.random_wait())
 
         print("🔍 Coletando tweets...")
 
@@ -104,11 +79,10 @@ async def scrape():
 
         while len(collected_this_run) < MAX_TWEETS:
 
-            # ⛔ Se não achar tweets, aviso
+
             tweets = page.locator("article:has(div[data-testid='User-Name'])")
             count = await tweets.count()
 
-            # ⬇️ Iterar nos tweets
             for i in range(count):
 
                 if len(collected_this_run) >= MAX_TWEETS:
@@ -125,7 +99,8 @@ async def scrape():
                     text_loc = t.locator("div[data-testid='tweetText']")
                     tweet_text = await text_loc.first.inner_text() if await text_loc.count() > 0 else None
                     if tweet_text:
-                        tweet_text = re.sub(r'\s+', ' ', tweet_text).strip()
+                        tweet_text = tp.clean_text(tweet_text)
+
 
                     # Timestamp
                     timestamp = await t.locator("time").first.get_attribute("datetime")
@@ -136,8 +111,8 @@ async def scrape():
                     if key in existing_tweet_ids or not tweet_id:
                         continue
 
-                    # Abrir perfil para obter localização
-                    location = None
+                    # Location via Tooltip
+                    # Abrir perfil talvez? +Lento, se for.
                     try:
                         tooltip_locator = t.locator("div[data-testid='HoverCard'], span[data-testid='UserLocation']")
                         if await tooltip_locator.count() > 0:
@@ -165,9 +140,9 @@ async def scrape():
                 except Exception as e:
                     print("Erro ao processar tweet:", e)
 
-            # anti-bloqueio: scroll aleatório
-            await page.mouse.wheel(0, random_scroll())
-            await page.wait_for_timeout(random_wait())
+            # anti-bloqueio: scroll e wait aleatório
+            await page.mouse.wheel(0, rv.random_scroll())
+            await page.wait_for_timeout(rv.random_wait())
         await browser.close()
         # salvar CSV
         with open(OUTPUT_FILE, "w", newline="", encoding="utf-8") as f:
