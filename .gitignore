@@ -3,9 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Auth
-auth.jso
-x.com_cookies.txt
+
 
 # C extensions
 *.so
@@ -184,3 +182,7 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 /.idea
+
+# Auth
+auth.json
+x.com_cookies.txt
