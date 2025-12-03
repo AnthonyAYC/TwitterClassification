@@ -56,7 +56,10 @@ def clean_text(text):
     # normalização de gírias
     text = normalize_girias(text)
 
-    # remoção de acentos (opcional)
+    # remoção de acentos
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("utf-8")
+
+    # texto para minusculo
+    text = text.lower()
 
     return text

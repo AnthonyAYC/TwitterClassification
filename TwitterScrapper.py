@@ -7,11 +7,12 @@ import TextProcessing as tp
 import RandomValues as rv
 from playwright.async_api import async_playwright
 from datetime import datetime, timezone, timedelta
+from urllib.parse import quote
 
 
-MAX_TWEETS = 15
+MAX_TWEETS = 50
 AUTH_FILE = "auth.json"
-SEARCH_QUERY = '"suicida" OR "suicídio" OR "me matar" OR "meu bilhete suicida" OR "minha carta suicida" OR "ir dormir pra sempre"' + ' lang:pt'
+SEARCH_QUERY = '("suicida" OR "suicídio" OR "me matar" OR "meu bilhete suicida" OR "minha carta suicida" OR "ir dormir pra sempre")'
 OUTPUT_FILE = "tweets.csv"
 
 # Carregar tweets existentes
@@ -51,6 +52,93 @@ async def load_cookies(context):
         exit()
 
 
+def build_x_query(terms,since=None,until=None, lang="pt"):
+
+    query = "(" + " OR ".join([f'"{t}"' for t in terms]) + ")"
+
+    if since:
+        query += f" since:{since}"
+    if until:
+        query += f" until:{until}"
+    if lang:
+        query += f" lang:{lang}"
+    # codifica para URL
+    return quote(query)
+
+async def scrape_day(page, day_start, day_end):
+
+    query = build_x_query(terms=[
+        "suicida", "suicídio", "me matar",
+        "meu bilhete suicida", "minha carta suicida",
+        "ir dormir pra sempre"],
+        since = day_start,
+        until = day_end
+    )
+
+    url = f"https://x.com/search?q={query}&src=typed_query&f=live"
+
+    await page.goto(url)
+    await page.wait_for_timeout(rv.random_wait())
+
+    collected_today = 0
+
+    while collected_today < MAX_TWEETS:
+
+        tweets = page.locator("article:has(div[data-testid='User-Name'])")
+        count = await tweets.count()
+
+        for i in range(count):
+
+            if collected_today >= MAX_TWEETS:
+                break
+
+            t = tweets.nth(i)
+
+            try:
+                tweet_id = await t.locator("a[href*='/status/']").first.get_attribute("href")
+                tweet_id = tweet_id.split("/")[-1] if tweet_id else None
+
+                text_loc = t.locator("div[data-testid='tweetText']")
+                tweet_text = await text_loc.first.inner_text() if await text_loc.count() > 0 else None
+                if tweet_text:
+                    tweet_text = tp.clean_text(tweet_text)
+
+                timestamp = await t.locator("time").first.get_attribute("datetime")
+                timestamp_br = convert_utc_to_brasilia(timestamp)
+
+                if not tweet_id or tweet_id in existing_tweet_ids:
+                    continue
+
+                try:
+                    tooltip_locator = t.locator("div[data-testid='HoverCard'], span[data-testid='UserLocation']")
+                    location = await tooltip_locator.inner_text() if await tooltip_locator.count() > 0 else None
+                except:
+                    location = None
+
+                existing_tweet_ids.add(tweet_id)
+                results.append({
+                    "tweet_id": tweet_id,
+                    "text": tweet_text,
+                    "timestamp": timestamp_br,
+                    "location": location
+                })
+
+                collected_today += 1
+
+                print(f"\n📌 ({collected_today}/{MAX_TWEETS}) - {day_start}")
+                print(f"ID: {tweet_id}")
+                print(f"Data: {timestamp_br}")
+                print(f"Loc: {location}")
+                print(f"Tweet: {tweet_text}\n")
+
+            except Exception as e:
+                print("Erro ao processar tweet:", e)
+
+        await page.mouse.wheel(0, rv.random_scroll())
+        await page.wait_for_timeout(rv.random_wait())
+
+    print(f"✔️ Dia {day_start} completo ({collected_today} tweets).")
+
 async def scrape():
     proxy = random.choice(PROXIES) if PROXIES else None
 
@@ -66,90 +154,35 @@ async def scrape():
         )
 
         await load_cookies(context)
-
         page = await context.new_page()
 
-        url = f"https://x.com/search?q={SEARCH_QUERY}&src=typed_query&f=live"
-        await page.goto(url)
-        await page.wait_for_timeout(rv.random_wait())
+        # Loop de dias
+        start = datetime(2025, 11, 1)
+        end = datetime(2025, 11, 5)
 
-        print("🔍 Coletando tweets...")
+        current = start
 
-        collected_this_run = set()
+        while current <= end:
+            day_start = current.strftime("%Y-%m-%d")
+            day_end   = (current + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        while len(collected_this_run) < MAX_TWEETS:
+            print(f"\n=============================")
+            print(f"📅 Coletando dia {day_start}")
+            print(f"=============================\n")
 
+            await scrape_day(page, day_start, day_end)
 
-            tweets = page.locator("article:has(div[data-testid='User-Name'])")
-            count = await tweets.count()
+            current += timedelta(days=1)
 
-            for i in range(count):
-
-                if len(collected_this_run) >= MAX_TWEETS:
-                    break
-
-                t = tweets.nth(i)
-
-                try:
-                    # Username
-                    tweet_id = await t.locator("a[href*='/status/']").first.get_attribute("href")
-                    tweet_id = tweet_id.split("/")[-1] if tweet_id else None
-
-                    # Texto
-                    text_loc = t.locator("div[data-testid='tweetText']")
-                    tweet_text = await text_loc.first.inner_text() if await text_loc.count() > 0 else None
-                    if tweet_text:
-                        tweet_text = tp.clean_text(tweet_text)
-
-
-                    # Timestamp
-                    timestamp = await t.locator("time").first.get_attribute("datetime")
-                    timestamp_br = convert_utc_to_brasilia(timestamp)
-
-                    # ID único
-                    key = tweet_id
-                    if key in existing_tweet_ids or not tweet_id:
-                        continue
-
-                    # Location via Tooltip
-                    # Abrir perfil talvez? +Lento, se for.
-                    try:
-                        tooltip_locator = t.locator("div[data-testid='HoverCard'], span[data-testid='UserLocation']")
-                        if await tooltip_locator.count() > 0:
-                            location = await tooltip_locator.inner_text()
-                        else:
-                            location = None
-                    except:
-                        location = None
-
-                    existing_tweet_ids.add(key)
-                    collected_this_run.add(key)
-                    results.append({
-                        "tweet_id": tweet_id,
-                        "text": tweet_text,
-                        "timestamp": timestamp_br,
-                        "location": location
-                    })
-
-                    print(f"\n📌 Tweet coletado ({len(collected_this_run)}/{MAX_TWEETS}):")
-                    print(f"ID {tweet_id}")
-                    print(f"Data e Hora {timestamp_br}")
-                    print(f"Loc {location}")
-                    print(f"Tweet: {tweet_text}\n")
-
-                except Exception as e:
-                    print("Erro ao processar tweet:", e)
-
-            # anti-bloqueio: scroll e wait aleatório
-            await page.mouse.wheel(0, rv.random_scroll())
-            await page.wait_for_timeout(rv.random_wait())
         await browser.close()
+
         # salvar CSV
         with open(OUTPUT_FILE, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=["tweet_id", "text", "timestamp", "location"])
             writer.writeheader()
             writer.writerows(results)
 
-        print(f"\n{len(results)} tweets salvos em {OUTPUT_FILE}")
+        print(f"\n💾 {len(results)} tweets salvos em {OUTPUT_FILE}")
+
 
 asyncio.run(scrape())
