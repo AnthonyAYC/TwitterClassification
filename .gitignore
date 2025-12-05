@@ -184,8 +184,9 @@ cython_debug/
 /.idea
 
 # Auth
-auth.json
+convert_cookie.py
 x.com_cookies.txt
+auth.json
 
 # Tweets
 tweets.csv
