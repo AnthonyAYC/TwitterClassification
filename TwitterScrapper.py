@@ -13,7 +13,7 @@ from urllib.parse import quote
 MAX_TWEETS = 50
 AUTH_FILE = "auth.json"
 SEARCH_QUERY = '("suicida" OR "suicídio" OR "me matar" OR "meu bilhete suicida" OR "minha carta suicida" OR "ir dormir pra sempre")'
-OUTPUT_FILE = "tweets.csv"
+OUTPUT_FILE = "csv_files/tweets.csv"
 
 # Carregar tweets existentes
 existing_tweet_ids = set()
