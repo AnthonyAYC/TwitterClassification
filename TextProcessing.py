@@ -1,6 +1,5 @@
 import re
 import unicodedata
-
 # dicionário de normalização de gírias/abreviações
 giria_map = {
     "n": "não",
@@ -63,3 +62,4 @@ def clean_text(text):
     text = text.lower()
 
     return text
+

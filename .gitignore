@@ -184,6 +184,7 @@ cython_debug/
 /.idea
 
 # Auth
+/accounts
 convert_cookie.py
 x.com_cookies.txt
 auth.json
@@ -191,6 +192,14 @@ auth.json
 # Tweets
 tweets.csv
 
-#Modelos
-/modelo_ideacao_suicida/
-/bertimbau-suicidio/
+#Pastas
+/modelo_ideacao_suicida
+/bertimbau-suicidio
+/bertimbau-suicidio-large
+/best_model
+/tweets
+/debug
+
+#Arquivos Soltos
+main.py
+

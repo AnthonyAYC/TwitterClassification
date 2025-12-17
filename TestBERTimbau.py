@@ -6,15 +6,15 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Caminho do modelo treinado
-model_path = "modelo_ideacao_suicida"
+model_path = "best_model/modelo_ideacao_suicida_godlike"
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = AutoModelForSequenceClassification.from_pretrained(model_path).to(device)
 
 # Carrega o dataset novamente
-df = pd.read_csv("csv_files/tweets.csv")
+df = pd.read_csv("csv_files/boamente_test.csv")
 texts = df["text"].tolist()
-# labels = df["target"].tolist()
+#labels = df["target"].tolist()
 
 preds = []
 
@@ -33,12 +33,11 @@ for t in texts:
     print(f'{len(preds)}/{len(texts)}')
 
 # Relatórios -> Se tiver df com label.
-'''
-    print("\n===== CLASSIFICATION REPORT =====\n")
-    print(classification_report(labels, preds))
+print("\n===== CLASSIFICATION REPORT =====\n")
+print(classification_report(labels, preds, digits=3))
 
-    print("\n===== MATRIZ DE CONFUSÃO =====\n")
-    print(confusion_matrix(labels, preds))
+print("\n===== MATRIZ DE CONFUSÃO =====\n")
+print(confusion_matrix(labels, preds))
 '''
 #Exportando o resultado
 result_df = pd.DataFrame({
@@ -47,3 +46,4 @@ result_df = pd.DataFrame({
 })
 
 result_df.to_csv("csv_files/results_BERTimbau.csv", index=False, encoding="utf-8")
+'''

@@ -1,5 +1,40 @@
 '"suicida" OR "suicídio" OR "me matar" OR "meu bilhete suicida" OR "minha carta suicida" OR "ir dormir pra sempre"'
-'"acabar com a minha vida" OR "nunca acordar" OR "não consigo continuar" OR "não vale a pena viver" OR "pronto para pular"'
-'"dormir pra sempre" OR "quero morrer" OR "estar morto" OR "melhor sem mim" OR "melhor morto"'
-'"plano de suicídio" OR "pacto de suicídio" OR "cansado de viver" OR "não quero estar aqui" OR "morrer sozinho"'
+'("acabar com a minha vida" OR "nunca acordar" OR "não consigo continuar" OR "não vale a pena viver" OR "pronto para pular")'
+'("dormir pra sempre" OR "quero morrer" OR "estar morto" OR "melhor sem mim" OR "melhor morto")'
+'("plano de suicídio" OR "pacto de suicídio" OR "cansado de viver" OR "não quero estar aqui" OR "morrer sozinho")'
 
+# Conjunto 1
+query = build_x_query(terms=[
+    "suicida", "suicídio", "me matar",
+    "meu bilhete suicida", "minha carta suicida",
+    "ir dormir pra sempre"],
+    since=day_start,
+    until=day_end
+)
+
+# Conjunto 2
+query = build_x_query(terms=[
+    "acabar com a minha vida", "nunca acordar",
+    "não consigo continuar", "não vale a pena viver",
+    "pronto para pular"],
+    since=day_start,
+    until=day_end
+)
+
+# Conjunto 3
+query = build_x_query(terms=[
+    "dormir pra sempre", "quero morrer",
+    "estar morto", "melhor sem mim",
+    "melhor morto"],
+    since=day_start,
+    until=day_end
+)
+
+# Conjunto 4
+query = build_x_query(terms=[
+    "plano de suicídio", "pacto de suicídio",
+    "cansado de viver", "não quero estar aqui",
+    "morrer sozinho"],
+    since=day_start,
+    until=day_end
+)

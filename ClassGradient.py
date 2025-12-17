@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.svm import LinearSVC
-from sklearn.metrics import classification_report
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import classification_report, confusion_matrix
 from imblearn.pipeline import Pipeline as ImbPipeline
 from imblearn.over_sampling import RandomOverSampler
 
@@ -18,15 +18,17 @@ y_test = df_test['target'].values
 model = ImbPipeline([
     ("tfidf", TfidfVectorizer(ngram_range=(1, 2), max_features=20000)),
     ("oversampler", RandomOverSampler(random_state=42)),
-    ("svc", LinearSVC(random_state=42))
+    ("clf", GradientBoostingClassifier(random_state=42))
 ])
 
-# Treinamento e predição
-print("Iniciando treinamento com LinearSVC e Oversampling")
+# Treinamento
+print("Iniciando treinamento com Gradient Boosting e Oversampling")
 model.fit(X_train, y_train)
+
+# Predição do modelo
 y_pred = model.predict(X_test)
 
 # Resultados
-print("\n===== LINEAR SVC (OVERSAMPLED) =====\n")
+print("\n===== GRADIENT BOOSTING (OVERSAMPLED) =====\n")
 print(classification_report(y_test, y_pred, digits=3))
 print("\nMatriz de Confusão:\n", confusion_matrix(y_test, y_pred))

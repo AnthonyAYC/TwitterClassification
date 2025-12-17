@@ -1,8 +1,8 @@
 datasets==4.4.1
 evaluate==0.4.6
+imbalanced_learn==0.14.0
 numpy==2.3.5
 pandas==2.3.3
 playwright==1.56.0
-scikit_learn==1.7.2
-torch==2.9.0+cu130
+scikit_learn==1.8.0
 transformers==4.57.3
