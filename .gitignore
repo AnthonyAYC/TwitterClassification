@@ -199,6 +199,7 @@ tweets.csv
 /best_model
 /tweets
 /debug
+/results
 
 #Arquivos Soltos
 main.py
